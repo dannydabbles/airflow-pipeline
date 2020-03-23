@@ -1,6 +1,7 @@
 # This is the class you derive to create a plugin
+import os
 import requests
-import json
+from urllib.parse import urlparse
 
 from flask_appbuilder import BaseView as AppBuilderBaseView
 
@@ -18,6 +19,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.www import utils as wwwutils
 from airflow import configuration as conf
+from airflow.models import DagBag, DagModel, DagRun
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
@@ -35,7 +37,17 @@ class SaveWebText(AppBuilderBaseView):
     def list(self):
         form = SaveWebTextForm()
         if form.validate_on_submit():
-            # TODO: Trigger pipeline here
+            dag_bag = models.DagBag(settings.DAGS_FOLDER)
+            dag = dag_bag.get_dag('save_web_text')
+            dag.create_dagrun(
+                run_id=f"save_web_text__{timezone.utcnow().isoformat()}",
+                execution_date=timezone.utcnow(),
+                state=State.RUNNING,
+                conf={
+                    'url': form.url.data
+                },
+                external_trigger=True,
+            )
             flash('Processing URL: {}'.format(
                 form.url.data))
         return self.render_template('main.html', form=form)
