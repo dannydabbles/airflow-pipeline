@@ -1,6 +1,12 @@
 {% extends "appbuilder/base.html" %}
 {% block content %}
-
-{{ content }}
-
+    <h1>Save Web Text</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.url.label }}<br>
+            {{ form.url(size=75) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
 {% endblock %}

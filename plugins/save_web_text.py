@@ -6,7 +6,7 @@ from flask_appbuilder import BaseView as AppBuilderBaseView
 
 from airflow.plugins_manager import AirflowPlugin
 
-from flask import Blueprint, redirect, request
+from flask import Blueprint, redirect, request, flash
 from flask_appbuilder import expose
 from flask_appbuilder import has_access
 from flask_admin.base import MenuLink
@@ -19,11 +19,26 @@ from airflow.utils.state import State
 from airflow.www import utils as wwwutils
 from airflow import configuration as conf
 
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired
+
+
+class SaveWebTextForm(FlaskForm):
+    url = StringField('URL to process', validators=[DataRequired()])
+    submit = SubmitField('Save web text')
+
+
 # Creating a flask admin BaseView
 class SaveWebText(AppBuilderBaseView):
-    @expose('/')
+    @expose('/', methods=['GET', 'POST'])
     def list(self):
-        return self.render_template("main.html", content="Hello galaxy!")
+        form = SaveWebTextForm()
+        if form.validate_on_submit():
+            # TODO: Trigger pipeline here
+            flash('Processing URL: {}'.format(
+                form.url.data))
+        return self.render_template('main.html', form=form)
 
 bp = Blueprint(
     "save_web_text", __name__,
